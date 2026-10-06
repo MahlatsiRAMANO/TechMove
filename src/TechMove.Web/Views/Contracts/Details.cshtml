@@ -1,0 +1,89 @@
+@model Contract
+@{
+    ViewData["Title"] = $"Contract #{Model.Id}";
+    var canRequest = ViewBag.CanRequestService is bool b && b;
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">Contract #@Model.Id <partial name="_StatusBadge" model="Model.Status" /></h1>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        @if (canRequest)
+        {
+            <a class="btn btn-primary" asp-controller="ServiceRequests" asp-action="Create" asp-route-contractId="@Model.Id">New service request</a>
+        }
+        else
+        {
+            <button class="btn btn-primary" disabled title="Not allowed for Expired / On Hold contracts">New service request</button>
+        }
+    </div>
+</div>
+
+@if (!canRequest)
+{
+    <div class="alert alert-warning">Service requests are blocked for this contract (it is Expired, On Hold, or past its end date).</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <dl class="row">
+            <dt class="col-sm-4">Client</dt>
+            <dd class="col-sm-8"><a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.ClientId">@Model.Client?.Name</a></dd>
+            <dt class="col-sm-4">Region</dt><dd class="col-sm-8">@Model.Client?.Region</dd>
+            <dt class="col-sm-4">Start date</dt><dd class="col-sm-8">@Model.StartDate.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-4">End date</dt><dd class="col-sm-8">@Model.EndDate.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-4">Service level</dt><dd class="col-sm-8">@Model.ServiceLevel</dd>
+        </dl>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">Signed agreement</div>
+            <div class="card-body">
+                @if (Model.HasSignedAgreement)
+                {
+                    <p class="mb-2">
+                        <strong>@Model.SignedAgreementFileName</strong><br />
+                        <span class="text-muted small">Uploaded @Model.SignedAgreementUploadedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                    </p>
+                    <a class="btn btn-sm btn-success mb-3" asp-action="DownloadAgreement" asp-route-id="@Model.Id">Download PDF</a>
+                }
+                else
+                {
+                    <p class="text-warning">No signed agreement uploaded yet.</p>
+                }
+                <form asp-action="UploadAgreement" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                    <label class="form-label small" for="signedAgreement">@(Model.HasSignedAgreement ? "Replace" : "Upload") agreement (PDF, max 10 MB)</label>
+                    <div class="input-group">
+                        <input type="file" id="signedAgreement" name="signedAgreement" accept=".pdf,application/pdf" class="form-control" required
+                               data-pdf-only="true" data-max-bytes="@TechMove.Web.Services.Files.PdfFileValidator.MaxFileSizeBytes" />
+                        <button class="btn btn-outline-primary" type="submit">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="h5 mt-4">Service requests</h2>
+@if (Model.ServiceRequests.Count == 0)
+{
+    <p class="text-muted">No service requests yet.</p>
+}
+else
+{
+    <table class="table table-sm">
+        <thead><tr><th>#</th><th>Description</th><th class="text-end">USD</th><th class="text-end">ZAR</th><th>Status</th></tr></thead>
+        <tbody>
+        @foreach (var r in Model.ServiceRequests.OrderByDescending(x => x.CreatedAtUtc))
+        {
+            <tr>
+                <td><a asp-controller="ServiceRequests" asp-action="Details" asp-route-id="@r.Id">#@r.Id</a></td>
+                <td>@r.Description</td>
+                <td class="text-end">$@r.CostUsd.ToString("N2")</td>
+                <td class="text-end">R @r.Cost.ToString("N2")</td>
+                <td>@r.Status</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+<a asp-action="Index">Back to contracts</a>

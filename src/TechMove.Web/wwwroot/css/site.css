@@ -1,0 +1,31 @@
+:root {
+    --tm-primary: #0f4c81;
+}
+
+body {
+    background: #f6f8fb;
+}
+
+.tm-nav {
+    background: var(--tm-primary);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--tm-primary);
+    --bs-btn-border-color: var(--tm-primary);
+    --bs-btn-hover-bg: #0b3a63;
+    --bs-btn-hover-border-color: #0b3a63;
+}
+
+.tm-stat {
+    border: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+
+.card {
+    border-color: #e3e8ef;
+}
+
+.input-validation-error {
+    border-color: var(--bs-danger);
+}

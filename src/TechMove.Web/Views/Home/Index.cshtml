@@ -1,0 +1,28 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <h1 class="h3 mb-0">Dashboard</h1>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-controller="Contracts" asp-action="Create">New contract</a>
+        <a class="btn btn-primary" asp-controller="ServiceRequests" asp-action="Create">New service request</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Clients</div><div class="fs-3 fw-semibold">@Model.ClientCount</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Active contracts</div><div class="fs-3 fw-semibold text-success">@Model.ActiveContracts</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Service requests</div><div class="fs-3 fw-semibold">@Model.ServiceRequestCount</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Total service cost</div><div class="fs-3 fw-semibold">R @Model.TotalServiceCostZar.ToString("N2")</div></div></div></div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">Contracts by status</div>
+    <div class="card-body d-flex flex-wrap gap-4">
+        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="Draft">Draft: <strong>@Model.DraftContracts</strong></a>
+        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="Active">Active: <strong>@Model.ActiveContracts</strong></a>
+        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="OnHold">On Hold: <strong>@Model.OnHoldContracts</strong></a>
+        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="Expired">Expired: <strong>@Model.ExpiredContracts</strong></a>
+    </div>
+</div>

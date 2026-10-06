@@ -1,0 +1,13 @@
+@model ContractStatus
+@{
+    var css = Model switch
+    {
+        ContractStatus.Active => "bg-success",
+        ContractStatus.Draft => "bg-secondary",
+        ContractStatus.OnHold => "bg-warning text-dark",
+        ContractStatus.Expired => "bg-danger",
+        _ => "bg-light text-dark"
+    };
+    var label = Model == ContractStatus.OnHold ? "On Hold" : Model.ToString();
+}
+<span class="badge @css">@label</span>

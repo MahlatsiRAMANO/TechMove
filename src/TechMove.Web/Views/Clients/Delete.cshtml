@@ -1,0 +1,20 @@
+@model Client
+@{
+    ViewData["Title"] = "Delete client";
+}
+<h1 class="h3 mb-3">Delete client</h1>
+@if (Model.Contracts.Count > 0)
+{
+    <div class="alert alert-warning">
+        <strong>@Model.Name</strong> has @Model.Contracts.Count contract(s) and cannot be deleted.
+    </div>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+}
+else
+{
+    <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-link">Cancel</a>
+    </form>
+}

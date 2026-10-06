@@ -1,0 +1,38 @@
+@model ServiceRequest
+@{
+    ViewData["Title"] = $"Service request #{Model.Id}";
+    var isFinal = Model.Status is ServiceRequestStatus.Completed or ServiceRequestStatus.Cancelled;
+}
+<h1 class="h3 mb-3">Service request #@Model.Id</h1>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <dl class="row">
+            <dt class="col-sm-4">Client</dt><dd class="col-sm-8">@Model.Contract?.Client?.Name</dd>
+            <dt class="col-sm-4">Contract</dt>
+            <dd class="col-sm-8">
+                <a asp-controller="Contracts" asp-action="Details" asp-route-id="@Model.ContractId">#@Model.ContractId</a>
+                @if (Model.Contract is not null)
+                {
+                    <partial name="_StatusBadge" model="Model.Contract.Status" />
+                }
+            </dd>
+            <dt class="col-sm-4">Description</dt><dd class="col-sm-8">@Model.Description</dd>
+            <dt class="col-sm-4">Cost (USD)</dt><dd class="col-sm-8">$@Model.CostUsd.ToString("N2")</dd>
+            <dt class="col-sm-4">Rate used</dt><dd class="col-sm-8">1 USD = R @Model.ExchangeRate.ToString("N4")</dd>
+            <dt class="col-sm-4">Cost (ZAR)</dt><dd class="col-sm-8 fw-semibold">R @Model.Cost.ToString("N2")</dd>
+            <dt class="col-sm-4">Status</dt><dd class="col-sm-8">@Model.Status</dd>
+            <dt class="col-sm-4">Created</dt><dd class="col-sm-8">@Model.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</dd>
+        </dl>
+    </div>
+    <div class="col-lg-5">
+        @if (!isFinal)
+        {
+            <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="card card-body">
+                <label class="form-label" for="status">Change status</label>
+                <select id="status" name="status" class="form-select mb-2" asp-items="Html.GetEnumSelectList<ServiceRequestStatus>()"></select>
+                <button type="submit" class="btn btn-outline-primary">Update</button>
+            </form>
+        }
+    </div>
+</div>
+<a asp-action="Index">Back to service requests</a>

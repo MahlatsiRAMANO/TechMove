@@ -1,0 +1,37 @@
+@model IReadOnlyList<ServiceRequest>
+@{
+    ViewData["Title"] = "Service requests";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Service requests</h1>
+    <a class="btn btn-primary" asp-action="Create">New service request</a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No service requests yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>#</th><th>Client</th><th>Contract</th><th>Description</th><th class="text-end">USD</th><th class="text-end">Rate</th><th class="text-end">ZAR</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@r.Id">#@r.Id</a></td>
+                    <td>@r.Contract?.Client?.Name</td>
+                    <td><a asp-controller="Contracts" asp-action="Details" asp-route-id="@r.ContractId">#@r.ContractId</a></td>
+                    <td>@r.Description</td>
+                    <td class="text-end">$@r.CostUsd.ToString("N2")</td>
+                    <td class="text-end">@r.ExchangeRate.ToString("N4")</td>
+                    <td class="text-end fw-semibold">R @r.Cost.ToString("N2")</td>
+                    <td>@r.Status</td>
+                    <td class="small">@r.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

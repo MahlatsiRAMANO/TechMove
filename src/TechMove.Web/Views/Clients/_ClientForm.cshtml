@@ -1,0 +1,28 @@
+@model Client
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+<div class="mb-3">
+    <label asp-for="Name" class="form-label"></label>
+    <input asp-for="Name" class="form-control" />
+    <span asp-validation-for="Name" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="ContactDetails" class="form-label"></label>
+    <input asp-for="ContactDetails" class="form-control" placeholder="email | phone" />
+    <span asp-validation-for="ContactDetails" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Region" class="form-label"></label>
+    <input asp-for="Region" class="form-control" list="regions" />
+    <datalist id="regions">
+        <option value="Gauteng"></option>
+        <option value="Western Cape"></option>
+        <option value="KwaZulu-Natal"></option>
+        <option value="Eastern Cape"></option>
+        <option value="Free State"></option>
+        <option value="Limpopo"></option>
+        <option value="Mpumalanga"></option>
+        <option value="North West"></option>
+        <option value="Northern Cape"></option>
+    </datalist>
+    <span asp-validation-for="Region" class="text-danger small"></span>
+</div>

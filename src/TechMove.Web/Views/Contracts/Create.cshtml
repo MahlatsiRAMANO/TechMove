@@ -1,0 +1,20 @@
+@model ContractFormViewModel
+@{
+    ViewData["Title"] = "New contract";
+}
+<h1 class="h3 mb-3">New contract</h1>
+<div class="row"><div class="col-lg-7">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="contractForm">
+        <partial name="_ContractFields" model="Model" />
+        <div class="mb-3">
+            <label asp-for="SignedAgreement" class="form-label"></label>
+            <input asp-for="SignedAgreement" type="file" accept=".pdf,application/pdf" class="form-control"
+                   data-pdf-only="true" data-max-bytes="@TechMove.Web.Services.Files.PdfFileValidator.MaxFileSizeBytes" />
+            <div class="form-text">PDF only, maximum 10 MB. Required for every contract.</div>
+            <span asp-validation-for="SignedAgreement" class="text-danger small"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Create contract</button>
+        <a asp-action="Index" class="btn btn-link">Cancel</a>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

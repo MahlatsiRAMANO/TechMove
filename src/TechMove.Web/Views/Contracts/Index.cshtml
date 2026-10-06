@@ -1,0 +1,75 @@
+@model ContractIndexViewModel
+@{
+    ViewData["Title"] = "Contracts";
+    var statusOptions = Html.GetEnumSelectList<ContractStatus>();
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Contracts</h1>
+    <a class="btn btn-primary" asp-action="Create">New contract</a>
+</div>
+
+<form asp-action="Index" method="get" class="card card-body mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-sm-6 col-lg-2">
+            <label asp-for="Criteria.FromDate" class="form-label"></label>
+            <input asp-for="Criteria.FromDate" name="FromDate" type="date" class="form-control" />
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <label asp-for="Criteria.ToDate" class="form-label"></label>
+            <input asp-for="Criteria.ToDate" name="ToDate" type="date" class="form-control" />
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <label asp-for="Criteria.Status" class="form-label"></label>
+            <select asp-for="Criteria.Status" name="Status" asp-items="statusOptions" class="form-select">
+                <option value="">Any status</option>
+            </select>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <label asp-for="Criteria.ClientName" class="form-label"></label>
+            <input asp-for="Criteria.ClientName" name="ClientName" class="form-control" placeholder="e.g. Acme" />
+        </div>
+        <div class="col-lg-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Search</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </div>
+    <div class="form-text mt-2">The date range returns contracts that are in force at any point between the two dates.</div>
+</form>
+
+<p class="text-muted small">@Model.Contracts.Count contract(s)@(Model.Criteria.IsEmpty ? "" : " match your filter")</p>
+
+@if (Model.Contracts.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>#</th><th>Client</th><th>Start</th><th>End</th><th>Status</th><th>Service level</th><th>Agreement</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var c in Model.Contracts)
+            {
+                <tr>
+                    <td>@c.Id</td>
+                    <td>@c.Client?.Name</td>
+                    <td>@c.StartDate.ToString("yyyy-MM-dd")</td>
+                    <td>@c.EndDate.ToString("yyyy-MM-dd")</td>
+                    <td><partial name="_StatusBadge" model="c.Status" /></td>
+                    <td>@c.ServiceLevel</td>
+                    <td>
+                        @if (c.HasSignedAgreement)
+                        {
+                            <a asp-action="DownloadAgreement" asp-route-id="@c.Id">Download PDF</a>
+                        }
+                        else
+                        {
+                            <span class="text-warning small">Missing</span>
+                        }
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@c.Id">View</a>
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@c.Id">Edit</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

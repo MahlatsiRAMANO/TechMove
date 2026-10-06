@@ -1,0 +1,18 @@
+## .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+TestResults/
+*.trx
+packages/
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## Uploaded agreements (simulated file server) - keep the folder, not the files
+src/TechMove.Web/App_Data/agreements/*
+!src/TechMove.Web/App_Data/agreements/.gitkeep

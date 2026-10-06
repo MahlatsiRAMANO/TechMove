@@ -1,0 +1,41 @@
+@model Client
+@{
+    ViewData["Title"] = Model.Name;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">@Model.Name</h1>
+    <div>
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn btn-primary" asp-controller="Contracts" asp-action="Create" asp-route-clientId="@Model.Id">New contract</a>
+    </div>
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Contact details</dt><dd class="col-sm-9">@Model.ContactDetails</dd>
+    <dt class="col-sm-3">Region</dt><dd class="col-sm-9">@Model.Region</dd>
+</dl>
+
+<h2 class="h5 mt-4">Contracts</h2>
+@if (Model.Contracts.Count == 0)
+{
+    <p class="text-muted">This client has no contracts yet.</p>
+}
+else
+{
+    <table class="table table-sm">
+        <thead><tr><th>#</th><th>Start</th><th>End</th><th>Status</th><th>Service level</th></tr></thead>
+        <tbody>
+        @foreach (var c in Model.Contracts.OrderByDescending(x => x.StartDate))
+        {
+            <tr>
+                <td><a asp-controller="Contracts" asp-action="Details" asp-route-id="@c.Id">#@c.Id</a></td>
+                <td>@c.StartDate.ToString("yyyy-MM-dd")</td>
+                <td>@c.EndDate.ToString("yyyy-MM-dd")</td>
+                <td><partial name="_StatusBadge" model="c.Status" /></td>
+                <td>@c.ServiceLevel</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+<a asp-action="Index">Back to clients</a>
