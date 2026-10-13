@@ -2,10 +2,10 @@
 @{
     var css = Model switch
     {
-        ContractStatus.Active => "bg-success",
-        ContractStatus.Draft => "bg-secondary",
-        ContractStatus.OnHold => "bg-warning text-dark",
-        ContractStatus.Expired => "bg-danger",
+        ContractStatus.Active => "tm-badge-active",
+        ContractStatus.Draft => "tm-badge-draft",
+        ContractStatus.OnHold => "tm-badge-onhold",
+        ContractStatus.Expired => "tm-badge-expired",
         _ => "bg-light text-dark"
     };
     var label = Model == ContractStatus.OnHold ? "On Hold" : Model.ToString();

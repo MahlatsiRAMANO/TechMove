@@ -11,18 +11,18 @@
 </div>
 
 <div class="row g-3">
-    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Clients</div><div class="fs-3 fw-semibold">@Model.ClientCount</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Active contracts</div><div class="fs-3 fw-semibold text-success">@Model.ActiveContracts</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Service requests</div><div class="fs-3 fw-semibold">@Model.ServiceRequestCount</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><div class="text-muted small">Total service cost</div><div class="fs-3 fw-semibold">R @Model.TotalServiceCostZar.ToString("N2")</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><span class="tm-stat-icon">👥</span><div class="text-muted small">Clients</div><div class="fs-3 fw-semibold">@Model.ClientCount</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><span class="tm-stat-icon mint">📄</span><div class="text-muted small">Active contracts</div><div class="fs-3 fw-semibold">@Model.ActiveContracts</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><span class="tm-stat-icon pink">🛠️</span><div class="text-muted small">Service requests</div><div class="fs-3 fw-semibold">@Model.ServiceRequestCount</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><span class="tm-stat-icon peach">💰</span><div class="text-muted small">Total service cost</div><div class="fs-3 fw-semibold">R @Model.TotalServiceCostZar.ToString("N2")</div></div></div></div>
 </div>
 
 <div class="card mt-4">
-    <div class="card-header">Contracts by status</div>
-    <div class="card-body d-flex flex-wrap gap-4">
-        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="Draft">Draft: <strong>@Model.DraftContracts</strong></a>
-        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="Active">Active: <strong>@Model.ActiveContracts</strong></a>
-        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="OnHold">On Hold: <strong>@Model.OnHoldContracts</strong></a>
-        <a asp-controller="Contracts" asp-action="Index" asp-route-Status="Expired">Expired: <strong>@Model.ExpiredContracts</strong></a>
+    <div class="card-header">✨ Contracts by status</div>
+    <div class="card-body d-flex flex-wrap gap-2">
+        <a class="tm-status-chip" asp-controller="Contracts" asp-action="Index" asp-route-Status="Draft">Draft <span class="badge tm-badge-draft">@Model.DraftContracts</span></a>
+        <a class="tm-status-chip" asp-controller="Contracts" asp-action="Index" asp-route-Status="Active">Active <span class="badge tm-badge-active">@Model.ActiveContracts</span></a>
+        <a class="tm-status-chip" asp-controller="Contracts" asp-action="Index" asp-route-Status="OnHold">On Hold <span class="badge tm-badge-onhold">@Model.OnHoldContracts</span></a>
+        <a class="tm-status-chip" asp-controller="Contracts" asp-action="Index" asp-route-Status="Expired">Expired <span class="badge tm-badge-expired">@Model.ExpiredContracts</span></a>
     </div>
 </div>
