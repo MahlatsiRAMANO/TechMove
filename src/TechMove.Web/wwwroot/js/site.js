@@ -1,5 +1,3 @@
-// Client-side PDF check for any <input type="file" data-pdf-only="true">.
-// The server repeats this check (extension, size and %PDF signature) - never trust the browser alone.
 document.addEventListener('change', function (e) {
     const input = e.target;
     if (!(input instanceof HTMLInputElement) || input.type !== 'file' || input.dataset.pdfOnly !== 'true') return;

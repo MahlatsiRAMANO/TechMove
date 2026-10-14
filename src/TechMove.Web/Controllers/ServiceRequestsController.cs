@@ -87,7 +87,6 @@ public class ServiceRequestsController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    /// <summary>JSON endpoint used by the Create page to preview the ZAR cost as the user types.</summary>
     [HttpGet]
     public async Task<IActionResult> ExchangeRate(CancellationToken ct)
     {

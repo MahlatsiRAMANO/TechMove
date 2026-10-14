@@ -6,7 +6,6 @@ using TechMove.Web.Services;
 using TechMove.Web.Services.Currency;
 using TechMove.Web.Services.Files;
 using TechMove.Web.Services.Workflow;
-// Lets integration tests reference the entry point if needed.
 
 public partial class Program {
     private static void Main(string[] args)
@@ -15,21 +14,21 @@ public partial class Program {
 
         builder.Services.AddControllersWithViews();
 
-        // ---- Database (connection string lives in appsettings.json, never hard-coded) ----
+
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found in appsettings.json.");
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
-        // ---- Options ----
+
         builder.Services.Configure<ExchangeRateApiOptions>(builder.Configuration.GetSection(ExchangeRateApiOptions.SectionName));
         builder.Services.Configure<FileStorageOptions>(builder.Configuration.GetSection(FileStorageOptions.SectionName));
 
-        // ---- Repositories (data access) ----
+
         builder.Services.AddScoped<IClientRepository, ClientRepository>();
         builder.Services.AddScoped<IContractRepository, ContractRepository>();
         builder.Services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>();
 
-        // ---- Business services ----
+
         builder.Services.AddScoped<IClientService, ClientService>();
         builder.Services.AddScoped<IContractService, ContractService>();
         builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
@@ -49,7 +48,7 @@ public partial class Program {
             return new LocalFileStorageService(root);
         });
 
-        // ---- External currency API (typed HttpClient via IHttpClientFactory) ----
+
         builder.Services.AddMemoryCache();
         builder.Services.AddHttpClient<IExchangeRateProvider, ExchangeRateApiProvider>((sp, client) =>
         {
@@ -79,5 +78,4 @@ public partial class Program {
     }
 }
 
-// Lets integration tests reference the entry point if needed.
 public partial class Program { }

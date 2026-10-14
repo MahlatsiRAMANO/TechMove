@@ -8,7 +8,6 @@ using TechMove.Web.ViewModels;
 
 namespace TechMove.Web.Controllers;
 
-/// <summary>Thin controller: it maps HTTP to the service layer and shows errors. No business rules here.</summary>
 public class ContractsController : Controller
 {
     private const long UploadLimit = PdfFileValidator.MaxFileSizeBytes + 1024 * 1024;
@@ -24,7 +23,6 @@ public class ContractsController : Controller
         _workflow = workflow;
     }
 
-    // GET /Contracts?FromDate=..&ToDate=..&Status=..&ClientName=..
     public async Task<IActionResult> Index([FromQuery] ContractSearchCriteria criteria, CancellationToken ct)
     {
         var vm = new ContractIndexViewModel
@@ -171,7 +169,6 @@ public class ContractsController : Controller
         var clients = await _clients.GetAllAsync(ct);
         vm.Clients = clients.Select(c => new SelectListItem($"{c.Name} ({c.Region})", c.Id.ToString()));
 
-        // Only offer statuses the workflow allows from where the contract is now.
         var statuses = isCreate
             ? new[] { ContractStatus.Draft, ContractStatus.Active }
             : _workflow.AllowedNextStatuses(currentStatus ?? vm.Status);
