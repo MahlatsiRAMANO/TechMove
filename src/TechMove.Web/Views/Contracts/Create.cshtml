@@ -9,7 +9,7 @@
         <div class="mb-3">
             <label asp-for="SignedAgreement" class="form-label"></label>
             <input asp-for="SignedAgreement" type="file" accept=".pdf,application/pdf" class="form-control"
-                   data-pdf-only="true" data-max-bytes="@TechMove.Web.Services.Files.PdfFileValidator.MaxFileSizeBytes" />
+                   data-pdf-only="true" data-max-bytes="10485760" />
             <div class="form-text">PDF only, maximum 10 MB. Required for every contract.</div>
             <span asp-validation-for="SignedAgreement" class="text-danger small"></span>
         </div>

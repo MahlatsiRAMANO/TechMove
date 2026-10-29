@@ -23,7 +23,7 @@ else
                     <td><a asp-action="Details" asp-route-id="@c.Id">@c.Name</a></td>
                     <td>@c.ContactDetails</td>
                     <td>@c.Region</td>
-                    <td class="text-end">@c.Contracts.Count</td>
+                    <td class="text-end">@c.ContractCount</td>
                     <td class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@c.Id">Edit</a>
                         <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@c.Id">Delete</a>

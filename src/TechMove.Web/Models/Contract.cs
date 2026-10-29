@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace TechMove.Web.Models;
 
-/// <summary>A service contract between TechMove and a client.</summary>
+/// <summary>A service contract between TechMove and a client (as returned by the TechMove API).</summary>
 public class Contract
 {
     public int Id { get; set; }
@@ -31,13 +31,17 @@ public class Contract
     [Display(Name = "Signed Agreement")]
     public string? SignedAgreementFileName { get; set; }
 
-    /// <summary>The GUID-based name on the file server (prevents overwrites and path tricks).</summary>
-    public string? SignedAgreementStoredName { get; set; }
 
     public DateTime? SignedAgreementUploadedAtUtc { get; set; }
 
     [ValidateNever]
     public ICollection<ServiceRequest> ServiceRequests { get; set; } = new List<ServiceRequest>();
 
-    public bool HasSignedAgreement => !string.IsNullOrEmpty(SignedAgreementStoredName);
+    public bool HasSignedAgreement { get; set; }
+
+    /// <summary>Calculated by the API's workflow - the frontend does not re-implement business rules.</summary>
+    public bool CanCreateServiceRequest { get; set; }
+
+    /// <summary>Statuses the API's workflow allows from the current one (includes the current status).</summary>
+    public List<ContractStatus> AllowedNextStatuses { get; set; } = new();
 }

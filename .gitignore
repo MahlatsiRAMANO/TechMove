@@ -16,3 +16,10 @@ packages/
 ## Uploaded agreements (simulated file server) - keep the folder, not the files
 src/TechMove.Web/App_Data/agreements/*
 !src/TechMove.Web/App_Data/agreements/.gitkeep
+
+## Docker - local secrets
+.env
+
+## Uploaded agreements in the API project
+src/TechMove.Api/App_Data/agreements/*
+!src/TechMove.Api/App_Data/agreements/.gitkeep

@@ -1,7 +1,9 @@
 @model Contract
 @{
     ViewData["Title"] = $"Contract #{Model.Id}";
-    var canRequest = ViewBag.CanRequestService is bool b && b;
+    var canRequest = Model.CanCreateServiceRequest;
+    var nextStatuses = Model.AllowedNextStatuses.Where(s => s != Model.Status).ToList();
+    var isAdmin = User.IsInRole("Admin");
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h1 class="h3 mb-0">Contract #@Model.Id <partial name="_StatusBadge" model="Model.Status" /></h1>
@@ -17,6 +19,36 @@
         }
     </div>
 </div>
+
+@if (nextStatuses.Count > 0)
+{
+    <div class="card mb-3">
+        <div class="card-body d-flex flex-wrap align-items-center gap-2">
+            <span class="me-2 fw-semibold">Workflow:</span>
+            @if (isAdmin)
+            {
+                foreach (var next in nextStatuses)
+                {
+                    var (label, css) = next switch
+                    {
+                        ContractStatus.Active => ("Approve (Active)", "btn-success"),
+                        ContractStatus.OnHold => ("Decline / put On Hold", "btn-warning"),
+                        ContractStatus.Expired => ("Mark Expired", "btn-outline-danger"),
+                        _ => (next.ToString(), "btn-outline-secondary")
+                    };
+                    <form asp-action="ChangeStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        <input type="hidden" name="status" value="@next" />
+                        <button type="submit" class="btn btn-sm @css">@label</button>
+                    </form>
+                }
+            }
+            else
+            {
+                <span class="text-muted small">Only administrators can approve or decline contracts.</span>
+            }
+        </div>
+    </div>
+}
 
 @if (!canRequest)
 {
@@ -54,7 +86,7 @@
                     <label class="form-label small" for="signedAgreement">@(Model.HasSignedAgreement ? "Replace" : "Upload") agreement (PDF, max 10 MB)</label>
                     <div class="input-group">
                         <input type="file" id="signedAgreement" name="signedAgreement" accept=".pdf,application/pdf" class="form-control" required
-                               data-pdf-only="true" data-max-bytes="@TechMove.Web.Services.Files.PdfFileValidator.MaxFileSizeBytes" />
+                               data-pdf-only="true" data-max-bytes="10485760" />
                         <button class="btn btn-outline-primary" type="submit">Upload</button>
                     </div>
                 </form>

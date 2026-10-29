@@ -7,20 +7,9 @@
     <RootNamespace>TechMove.Web</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.*">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.*">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="TechMove.Tests" />
-  </ItemGroup>
+  <!--
+    Part 3: the MVC frontend has NO database packages. All data goes through the TechMove API
+    using HttpClient (see Services/Api). Only the API project references Entity Framework Core.
+  -->
 
 </Project>

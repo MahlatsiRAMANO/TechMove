@@ -25,6 +25,15 @@
                     <li class="nav-item"><a class="nav-link" asp-controller="Contracts" asp-action="Index">Contracts</a></li>
                     <li class="nav-item"><a class="nav-link" asp-controller="ServiceRequests" asp-action="Index">Service Requests</a></li>
                 </ul>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small">👤 @User.Identity.Name <span class="badge tm-badge-draft">@(User.IsInRole("Admin") ? "Admin" : "Staff")</span></span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Sign out</button>
+                        </form>
+                    </div>
+                }
             </div>
         </div>
     </nav>

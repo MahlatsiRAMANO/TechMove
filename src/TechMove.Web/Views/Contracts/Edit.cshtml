@@ -7,7 +7,7 @@
     <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
         <input type="hidden" asp-for="Id" />
         <partial name="_ContractFields" model="Model" />
-        <p class="form-text">Only the status changes the workflow allows are listed. Expired contracts are final.</p>
+        <p class="form-text">To approve or decline the contract, use the status buttons on the contract's details page (administrators only).</p>
         <p class="small">Signed agreement: <strong>@(Model.ExistingAgreementName ?? "none")</strong> – replace it from the contract's details page.</p>
         <button type="submit" class="btn btn-primary">Save</button>
         <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-link">Cancel</a>

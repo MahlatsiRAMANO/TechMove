@@ -1,6 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Http;
-using TechMove.Web.Services;
+using TechMove.Api.Services;
 
 namespace TechMove.Tests;
 
