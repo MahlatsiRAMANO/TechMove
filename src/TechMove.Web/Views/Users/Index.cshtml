@@ -1,0 +1,77 @@
+@model UsersIndexViewModel
+@{
+    ViewData["Title"] = "Users";
+    var roles = new[] { "Admin", "Staff", "Customer" };
+}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h1 class="h3 mb-0">Users</h1>
+</div>
+<p class="text-muted small mb-4">
+    New sign-ups start as <strong>Customer</strong> with no company. Link them to their client so they can see that
+    company's contracts, or promote employees to <strong>Staff</strong> / <strong>Admin</strong>.
+    Changes apply the next time the user signs in.
+</p>
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr><th>Username</th><th>Role &amp; company</th><th>Created</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var u in Model.Users)
+        {
+            var isMe = string.Equals(u.Username, User.Identity?.Name, StringComparison.OrdinalIgnoreCase);
+            <tr>
+                <td>
+                    <strong>@u.Username</strong>
+                    @if (isMe) { <span class="badge tm-badge-active ms-1">you</span> }
+                    @if (u.Role == "Customer" && u.ClientId is null) { <span class="badge tm-badge-onhold ms-1">needs company</span> }
+                </td>
+                <td>
+                    <form asp-action="UpdateAccess" asp-route-id="@u.Id" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                        <select name="role" class="form-select form-select-sm w-auto" disabled="@isMe">
+                            @foreach (var r in roles)
+                            {
+                                <option value="@r" selected="@(r == u.Role)">@r</option>
+                            }
+                        </select>
+                        <select name="clientId" class="form-select form-select-sm w-auto" title="Company (customers only)">
+                            <option value="">— no company —</option>
+                            @foreach (var c in Model.Clients)
+                            {
+                                <option value="@c.Id" selected="@(c.Id == u.ClientId)">@c.Name</option>
+                            }
+                        </select>
+                        @if (isMe)
+                        {
+                            <input type="hidden" name="role" value="@u.Role" />
+                        }
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                    </form>
+                </td>
+                <td class="small text-muted">@u.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                <td class="text-end">
+                    @if (!isMe)
+                    {
+                        <form asp-action="Delete" asp-route-id="@u.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Delete @u.Username?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body small">
+        <strong>What each role can do</strong>
+        <ul class="mb-0 mt-2">
+            <li><strong>Admin</strong> – everything, including approving/declining contracts, deleting clients and managing users.</li>
+            <li><strong>Staff</strong> – manage clients, contracts and service requests; cannot approve contracts, delete clients or manage users.</li>
+            <li><strong>Customer</strong> – sees only their own company's contracts and service requests, downloads agreements and logs new service requests.</li>
+        </ul>
+    </div>
+</div>

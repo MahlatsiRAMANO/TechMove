@@ -5,8 +5,11 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">@Model.Name</h1>
     <div>
-        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
-        <a class="btn btn-primary" asp-controller="Contracts" asp-action="Create" asp-route-clientId="@Model.Id">New contract</a>
+        @if (User.IsEmployee())
+        {
+            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+            <a class="btn btn-primary" asp-controller="Contracts" asp-action="Create" asp-route-clientId="@Model.Id">New contract</a>
+        }
     </div>
 </div>
 
@@ -38,4 +41,7 @@ else
         </tbody>
     </table>
 }
-<a asp-action="Index">Back to clients</a>
+@if (User.IsEmployee())
+{
+    <a asp-action="Index">Back to clients</a>
+}

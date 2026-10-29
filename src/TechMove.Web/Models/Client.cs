@@ -21,6 +21,9 @@ public class Client
     [StringLength(50)]
     public string Region { get; set; } = string.Empty;
 
+    /// <summary>Number of contracts (from GET /api/clients).</summary>
+    public int ContractCount { get; set; }
+
     [ValidateNever]
     public ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 }

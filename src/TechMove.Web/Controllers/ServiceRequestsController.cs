@@ -1,23 +1,23 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using TechMove.Web.Infrastructure;
 using TechMove.Web.Models;
-using TechMove.Web.Services;
-using TechMove.Web.Services.Currency;
+using TechMove.Web.Services.Api;
 using TechMove.Web.ViewModels;
 
 namespace TechMove.Web.Controllers;
 
+/// <summary>Presentation only: the API checks the workflow, fetches the exchange rate and saves the request.</summary>
 public class ServiceRequestsController : Controller
 {
-    private readonly IServiceRequestService _requests;
-    private readonly IContractService _contracts;
-    private readonly IExchangeRateProvider _rates;
+    private readonly IServiceRequestsApi _requests;
+    private readonly IContractsApi _contracts;
 
-    public ServiceRequestsController(IServiceRequestService requests, IContractService contracts, IExchangeRateProvider rates)
+    public ServiceRequestsController(IServiceRequestsApi requests, IContractsApi contracts)
     {
         _requests = requests;
         _contracts = contracts;
-        _rates = rates;
     }
 
     public async Task<IActionResult> Index(CancellationToken ct) => View(await _requests.GetAllAsync(ct));
@@ -43,21 +43,23 @@ public class ServiceRequestsController : Controller
         {
             try
             {
-                var created = await _requests.CreateAsync(vm.ContractId!.Value, vm.Description, vm.CostUsd!.Value, ct);
+                var created = await _requests.CreateAsync(vm.ContractId!.Value, vm.Description!, vm.CostUsd!.Value, ct);
                 TempData["Success"] =
                     $"Service request created: {created.CostUsd:N2} USD × {created.ExchangeRate:N4} = R {created.Cost:N2}.";
                 return RedirectToAction(nameof(Details), new { id = created.Id });
             }
-            catch (NotFoundException ex)
+            catch (ApiValidationException ex)
+            {
+                // e.g. "Service requests cannot be created for a contract that is 'Expired'."
+                ModelState.AddModelError(nameof(vm.ContractId), ex.Message);
+            }
+            catch (ApiNotFoundException ex)
             {
                 ModelState.AddModelError(nameof(vm.ContractId), ex.Message);
             }
-            catch (BusinessRuleException ex)
+            catch (ApiUnavailableException ex)
             {
-                ModelState.AddModelError(nameof(vm.ContractId), ex.Message);
-            }
-            catch (ExternalServiceException ex)
-            {
+                // 503 from the API when the currency service is down, or the API itself is unreachable.
                 ModelState.AddModelError(string.Empty, ex.Message);
             }
         }
@@ -68,18 +70,15 @@ public class ServiceRequestsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = UserRoles.Employees)]
     public async Task<IActionResult> UpdateStatus(int id, ServiceRequestStatus status, CancellationToken ct)
     {
         try
         {
-            await _requests.UpdateStatusAsync(id, status, ct);
+            await _requests.ChangeStatusAsync(id, status, ct);
             TempData["Success"] = "Status updated.";
         }
-        catch (NotFoundException)
-        {
-            return NotFound();
-        }
-        catch (BusinessRuleException ex)
+        catch (ApiValidationException ex)
         {
             TempData["Error"] = ex.Message;
         }
@@ -87,16 +86,24 @@ public class ServiceRequestsController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    /// <summary>Used by the Create page's live ZAR preview (wwwroot/js/service-request.js).</summary>
     [HttpGet]
     public async Task<IActionResult> ExchangeRate(CancellationToken ct)
     {
-        var rate = await _rates.GetUsdToZarRateAsync(ct);
-        return Json(new { success = rate.Success, rate = rate.Rate, retrievedAtUtc = rate.RetrievedAtUtc, error = rate.Error });
+        try
+        {
+            var rate = await _requests.GetUsdToZarRateAsync(ct);
+            return Json(new { success = true, rate = rate.Rate, retrievedAtUtc = rate.RetrievedAtUtc, error = (string?)null });
+        }
+        catch (ApiException ex) when (ex is not ApiUnauthorizedException)
+        {
+            return Json(new { success = false, rate = 0m, retrievedAtUtc = (DateTime?)null, error = ex.Message });
+        }
     }
 
     private async Task PopulateContractsAsync(ServiceRequestCreateViewModel vm, CancellationToken ct)
     {
-        var open = await _contracts.GetOpenForServiceRequestsAsync(ct);
+        var open = await _contracts.GetOpenAsync(ct);
         vm.Contracts = open.Select(c => new SelectListItem(
             $"#{c.Id} – {c.Client?.Name} ({c.Status}, {c.ServiceLevel}, ends {c.EndDate:yyyy-MM-dd})",
             c.Id.ToString(),

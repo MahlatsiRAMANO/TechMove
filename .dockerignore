@@ -1,0 +1,16 @@
+# Keep the build context small and avoid copying Windows build output into Linux images
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/TestResults/
+**/App_Data/agreements/*
+!**/App_Data/agreements/.gitkeep
+.git/
+.github/
+Database/
+docs/
+tests/
+*.md

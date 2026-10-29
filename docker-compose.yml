@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------------------
+# TechMove - full ecosystem
+#
+#   docker compose up --build        start everything
+#   docker compose down              stop (data is kept in volumes)
+#   docker compose down -v           stop and delete the database + uploaded files
+#
+#   Web app  →  http://localhost:5000     (sign in: admin / Admin@123)
+#   API      →  http://localhost:5001/swagger
+#   SQL      →  localhost,1433  (sa / value of SA_PASSWORD)
+#
+# Containers find each other by SERVICE NAME on the private "techmove-net" network:
+#   glms-frontend-web  --HTTP-->  glms-backend-api:8080  --TDS-->  sql-server-db:1433
+# ---------------------------------------------------------------------------
+name: techmove
+
+services:
+
+  # Container 1: the database
+  sql-server-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sql-server-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD:-TechMove!Passw0rd}"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -b -Q \"SELECT 1\" -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - techmove-net
+    restart: unless-stopped
+
+  # Container 2: the Web API (the only thing that talks to the database)
+  glms-backend-api:
+    build:
+      context: .
+      dockerfile: src/TechMove.Api/Dockerfile
+    image: techmove/glms-backend-api:latest
+    container_name: glms-backend-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      # "sql-server-db" is resolved by Docker's internal DNS to Container 1
+      ConnectionStrings__DefaultConnection: "Server=sql-server-db,1433;Database=TechMoveDb;User Id=sa;Password=${SA_PASSWORD:-TechMove!Passw0rd};TrustServerCertificate=True;MultipleActiveResultSets=true"
+      Jwt__Issuer: "TechMove.Api"
+      Jwt__Audience: "TechMove.Web"
+      Jwt__Key: "${JWT_KEY:-docker-compose-signing-key-please-override-0123456789abcdef}"
+      FileStorage__RootPath: "/app/App_Data/agreements"
+    ports:
+      - "5001:8080"
+    volumes:
+      - agreements:/app/App_Data/agreements
+    depends_on:
+      sql-server-db:
+        condition: service_healthy
+    networks:
+      - techmove-net
+    restart: unless-stopped
+
+  # Container 3: the MVC frontend (no database access - calls the API over HTTP)
+  glms-frontend-web:
+    build:
+      context: .
+      dockerfile: src/TechMove.Web/Dockerfile
+    image: techmove/glms-frontend-web:latest
+    container_name: glms-frontend-web
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      # "glms-backend-api" is resolved by Docker's internal DNS to Container 2
+      Api__BaseUrl: "http://glms-backend-api:8080/"
+      Api__TimeoutSeconds: "30"
+    ports:
+      - "5000:8080"
+    depends_on:
+      - glms-backend-api
+    networks:
+      - techmove-net
+    restart: unless-stopped
+
+networks:
+  techmove-net:
+    driver: bridge
+
+volumes:
+  sqldata:
+  agreements:

@@ -1,0 +1,40 @@
+@model TechMove.Web.Controllers.LoginViewModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+<div class="row justify-content-center">
+    <div class="col-sm-10 col-md-7 col-lg-5">
+        <div class="card mt-4">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-1 text-center">🦋 Welcome to TechMove</h1>
+                <p class="text-muted text-center mb-4">Sign in to manage contracts and service requests.</p>
+
+                <form asp-action="Login" method="post">
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Username" class="form-label"></label>
+                        <input asp-for="Username" class="form-control" autocomplete="username" autofocus />
+                        <span asp-validation-for="Username" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign in</button>
+                </form>
+
+                <p class="small text-center mt-3 mb-0">New customer? <a asp-action="Register">Create an account</a></p>
+
+                <div class="small text-muted mt-4">
+                    Demo accounts:
+                    <strong>admin</strong> / Admin@123 (Admin) ·
+                    <strong>staff</strong> / Staff@123 (Staff) ·
+                    <strong>acme</strong> / Customer@123 (Customer of Acme Logistics)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -5,10 +5,25 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <h1 class="h3 mb-0">Dashboard</h1>
     <div class="d-flex gap-2">
-        <a class="btn btn-outline-primary" asp-controller="Contracts" asp-action="Create">New contract</a>
+        @if (User.IsEmployee())
+        {
+            <a class="btn btn-outline-primary" asp-controller="Contracts" asp-action="Create">New contract</a>
+        }
         <a class="btn btn-primary" asp-controller="ServiceRequests" asp-action="Create">New service request</a>
     </div>
 </div>
+
+@if (User.IsUnlinkedCustomer())
+{
+    <div class="alert alert-info">
+        👋 Welcome! Your account has been created. An administrator still needs to link it to your company –
+        once that's done you'll see your contracts and can log service requests here.
+    </div>
+}
+else if (User.IsCustomer())
+{
+    <p class="text-muted">You are viewing your company's contracts and service requests.</p>
+}
 
 <div class="row g-3">
     <div class="col-6 col-lg-3"><div class="card tm-stat"><div class="card-body"><span class="tm-stat-icon">👥</span><div class="text-muted small">Clients</div><div class="fs-3 fw-semibold">@Model.ClientCount</div></div></div></div>

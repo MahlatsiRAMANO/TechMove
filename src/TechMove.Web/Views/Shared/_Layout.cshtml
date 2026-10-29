@@ -20,11 +20,30 @@
             </button>
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav me-auto">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
                     <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Clients" asp-action="Index">Clients</a></li>
+                    if (User.IsEmployee())
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Clients" asp-action="Index">Clients</a></li>
+                    }
                     <li class="nav-item"><a class="nav-link" asp-controller="Contracts" asp-action="Index">Contracts</a></li>
                     <li class="nav-item"><a class="nav-link" asp-controller="ServiceRequests" asp-action="Index">Service Requests</a></li>
+                    if (User.IsAdmin())
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Users" asp-action="Index">Users</a></li>
+                    }
+                    }
                 </ul>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small">👤 @User.Identity.Name <span class="badge tm-badge-draft">@(User.IsAdmin() ? "Admin" : User.IsEmployee() ? "Staff" : "Customer")</span></span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Sign out</button>
+                        </form>
+                    </div>
+                }
             </div>
         </div>
     </nav>

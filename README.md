@@ -1,87 +1,135 @@
-# TechMove – Contract & Service Management (EAPD7111 POE, Part 2)
+# TechMove – Contract & Service Management (EAPD7111 POE, Part 3)
 
-ASP.NET Core MVC (.NET 8) "monolith" prototype with EF Core + SQL Server, a contract workflow,
-PDF agreement uploads, live USD→ZAR conversion, and an xUnit test project.
+Part 3 decouples the Part 2 monolith into a **Service-Oriented Architecture**:
 
-## Solution layout
+| Project | Role | Talks to |
+|---|---|---|
+| `src/TechMove.Api` | ASP.NET Core **Web API** – the service layer. Owns the database, business rules, file storage and currency API. Swagger + JWT. | SQL Server, ExchangeRate-API |
+| `src/TechMove.Web` | ASP.NET Core **MVC** frontend – presentation only. **No database packages.** | TechMove.Api over HTTP (`HttpClient`) |
+| `tests/TechMove.Tests` | xUnit **unit tests** + **API integration tests** | TechMove.Api (in-process or the running container) |
 
 ```
-TechMove.sln
-├── src/TechMove.Web                MVC app
-│   ├── Models/                     Client, Contract, ServiceRequest, enums, search criteria
-│   ├── Data/                       AppDbContext (Fluent API), SeedData, LINQ filter
-│   │   └── Repositories/           Repository pattern – the only code that touches EF Core
-│   ├── Services/                   Business logic (service layer)
-│   │   ├── Workflow/               Contract state machine (status rules)
-│   │   ├── Currency/               Currency maths + ExchangeRate-API client (Strategy)
-│   │   └── Files/                  PDF validation + simulated file server
-│   ├── Controllers/                Thin controllers – call services only
-│   ├── ViewModels/  Views/  wwwroot/
-│   └── App_Data/agreements/        Uploaded PDFs land here (outside wwwroot)
-├── tests/TechMove.Tests            xUnit + Moq + EF Core InMemory
-└── .github/workflows/dotnet.yml    Builds and runs all tests on every push
+ Browser ──► glms-frontend-web (MVC, :5000) ──HTTP + JWT──► glms-backend-api (Web API, :5001) ──► sql-server-db (:1433)
+                                                                   │
+                                                                   └──► open.er-api.com (USD→ZAR)
 ```
 
-## How to run
+## Run everything with Docker (recommended)
 
-1. Open `TechMove.sln` in **Visual Studio 2022** (17.8+) with the **ASP.NET and web development** workload (.NET 8 SDK).
-2. The connection string is in `src/TechMove.Web/appsettings.json` and uses **LocalDB**:
-   `Server=(localdb)\mssqllocaldb;Database=TechMoveDb;...`
-   Change it if you use a full SQL Server instance (e.g. `Server=localhost;Database=TechMoveDb;Trusted_Connection=True;TrustServerCertificate=True`).
-3. Create the database – **Tools → NuGet Package Manager → Package Manager Console**, set *Default project* to `TechMove.Web`, then:
-   ```powershell
-   Add-Migration InitialCreate
-   Update-Database
-   ```
-   (CLI alternative: `dotnet tool install --global dotnet-ef`, then
-   `dotnet ef migrations add InitialCreate --project src/TechMove.Web` and
-   `dotnet ef database update --project src/TechMove.Web`.)
-4. Generate the **migration script** for submission:
-   ```powershell
-   Script-Migration -Output Database/TechMove_InitialCreate.sql
-   ```
-5. Press **F5**. Seed data gives you 3 clients and 4 contracts (one of each status).
-6. **Test Explorer → Run All** for the unit tests (take your screenshot here).
+Requires **Docker Desktop** (with WSL 2 on Windows).
 
-## Requirement → where it is
+```bash
+docker compose up --build
+```
 
-| Requirement | Implementation |
+| What | URL |
 |---|---|
-| SQL Server via EF Core | `Data/AppDbContext.cs` – keys, lengths, `decimal(18,2)`, enum→string, check constraints, indexes, `Restrict` deletes, all in Fluent API |
-| Client / Contract / ServiceRequest | `Models/` – Client 1→* Contract 1→* ServiceRequest |
-| Connection string not hard-coded | `appsettings.json` → `Program.cs` |
-| Signed agreement PDF for every contract | Required on *Create Contract*; replace on *Details*; download link everywhere |
-| File saved to server | `Services/Files/LocalFileStorageService.cs` – GUID file names (no overwrites), path-traversal guard, stored outside `wwwroot` |
-| PDF-only validation | `PdfFileValidator` – `.pdf` extension, not empty, ≤10 MB, `%PDF` signature (a renamed `.exe` fails). Also checked in the browser (`wwwroot/js/site.js`) |
-| No requests on Expired / On Hold | `Services/Workflow/ContractWorkflow.cs` – also blocks contracts past their end date; the Create page only lists eligible contracts, and the server re-checks |
-| Status workflow | Draft → Active / On Hold / Expired; Active ↔ On Hold; → Expired is final. Edit only offers legal next statuses |
-| LINQ search by date range & status | `Data/ContractQueryExtensions.cs` (`ApplyFilter`) used by *Contracts* page; date range = contract in force at any time in the range; reversed range is swapped |
-| Currency API with HttpClient | `Services/Currency/ExchangeRateProvider.cs` – typed `HttpClient`, async/await (no `.Result`), try/catch for timeouts, network and bad JSON, 30-min cache |
-| Auto-calculate and save ZAR | `ServiceRequestService.CreateAsync` – saves USD, rate used and ZAR cost; live preview on the form |
-| Unit tests | `tests/TechMove.Tests` – currency maths, file validation (.exe, double extension, fake PDF, empty, size limits), workflow, LINQ filter, HTTP client (fake handler), service layer (Moq), upload/download (InMemory DB + temp folder) |
-| GitHub Action | `.github/workflows/dotnet.yml` |
+| Web app | http://localhost:5000 – sign in (see accounts below) or **Create an account** |
+| API + Swagger | http://localhost:5001/swagger |
+| SQL Server | `localhost,1433` – user `sa`, password `TechMove!Passw0rd` |
 
-## Design patterns (from Part 1)
+The API applies the EF Core migration (tables + seed data) automatically on start-up.
+Stop with `docker compose down` (add `-v` to wipe the database and uploaded files).
+To change the SA password or JWT key, copy `.env.example` to `.env` and edit it.
 
-- **Repository** – `IRepository<T>` + `ClientRepository`, `ContractRepository`, `ServiceRequestRepository`. Controllers never see `DbContext`.
-- **Service Layer** – `ClientService`, `ContractService`, `ServiceRequestService` hold the business rules.
-- **State (workflow)** – `ContractWorkflow` owns every status transition and the request-blocking rule.
-- **Strategy** – `IExchangeRateProvider`; swap ExchangeRate-API for OpenExchangeRates (or a fake in tests) without touching business code.
-- **Factory** – `ServiceRequestFactory` builds valid new service requests in one place.
-- **Dependency Injection** – everything is registered in `Program.cs` against interfaces.
+## Accounts and roles
 
-## TOGAF alignment
+| Demo account | Password | Role |
+|---|---|---|
+| `admin` | `Admin@123` | **Admin** |
+| `staff` | `Staff@123` | **Staff** |
+| `acme` | `Customer@123` | **Customer** of Acme Logistics |
 
-| TOGAF ADM phase | How this prototype reflects it |
-|---|---|
-| Phase B – Business Architecture | Business entities (Client, Contract, Service Request) and business rules (status workflow, ZAR reporting) |
-| Phase C – Data Architecture | Normalised schema, relationships, constraints in `AppDbContext` |
-| Phase C – Application Architecture | Layered building blocks: Presentation (MVC) → Service Layer → Repository → Database |
-| Phase D – Technology Architecture | ASP.NET Core 8, SQL Server, EF Core, external REST API, simulated file server |
-| Phase E/F – Opportunities & Migration | Monolith first (MVP); interfaces at every boundary so services can be split out later |
-| Phase G – Implementation Governance | Unit tests + GitHub Actions CI as quality gates |
+| Can… | Admin | Staff | Customer |
+|---|:-:|:-:|:-:|
+| See contracts / service requests | all | all | own company only |
+| Log a service request | ✔ | ✔ | ✔ (own contracts) |
+| Manage clients, create/edit contracts, upload agreements | ✔ | ✔ | ✖ |
+| Approve / decline contracts (PATCH status) | ✔ | ✖ | ✖ |
+| Change service-request status | ✔ | ✔ | ✖ |
+| Delete clients | ✔ | ✖ | ✖ |
+| Manage users (roles, link customer to company, delete) | ✔ | ✖ | ✖ |
 
-## Notes
+**Sign-up:** anyone can create an account (web: *Create an account*; API: `POST /api/auth/register`).
+New accounts are always **Customers** with no company, so they see nothing until an Admin links them to a client
+on the **Users** page (or promotes them to Staff/Admin). Passwords are stored as salted PBKDF2 hashes in the `Users` table.
+The API enforces every rule; the web app also hides buttons a role can't use. A customer asking for another company's
+record gets **404**, a role that isn't allowed gets **403**.
 
-- The currency API used is ExchangeRate-API's free open endpoint (`https://open.er-api.com/v6/latest/USD`, no key). Change it in `appsettings.json`.
-- If the API is down, the user sees a clear message and nothing is saved.
+## Run from Visual Studio
+
+1. Start only the database container: `docker compose up -d sql-server-db`
+   (the API's `appsettings.json` points at `localhost,1433`).
+2. Right-click the solution → **Configure Startup Projects** → **Multiple startup projects** →
+   set **TechMove.Api** and **TechMove.Web** to *Start*.
+3. Press **F5**. API: https://localhost:7181/swagger · Web: https://localhost:7180
+
+## API endpoints
+
+All endpoints except `/api/auth/login`, `/api/auth/register` and `/health` need `Authorization: Bearer <token>`.
+In Swagger: call **POST /api/auth/login**, copy the token, click **Authorize**.
+
+| Verb | Route | Purpose | Success |
+|---|---|---|---|
+| POST | `/api/auth/login` | Username/password → JWT | 200 (401 if wrong) |
+| POST | `/api/auth/register` | Sign up (new Customer) → JWT | **201** / 400 / **409** |
+| GET | `/api/auth/me` | Signed-in profile | 200 |
+| GET / PATCH / DELETE | `/api/users[/{id}]` | Admin: list users, change role / company, delete | 200 / 204 / 400 / 403 / 404 |
+| GET | `/api/contracts?status=&fromDate=&toDate=&clientName=` | Search/filter (LINQ) | 200 |
+| GET | `/api/contracts/{id}` | One contract + client + service requests | 200 / 404 |
+| GET | `/api/contracts/open` | Contracts that can take service requests | 200 |
+| POST | `/api/contracts` (multipart, incl. PDF) | Create contract + signed agreement | **201** + Location / 400 |
+| PUT | `/api/contracts/{id}` | Update client, dates, service level | 204 / 400 / 404 |
+| PATCH | `/api/contracts/{id}/status` | Approve / decline (Admin only) – workflow enforced | 200 / 400 / 403 / 404 |
+| POST | `/api/contracts/{id}/agreement` | Replace signed agreement PDF | 204 / 400 |
+| GET | `/api/contracts/{id}/agreement` | Download PDF | 200 / 404 |
+| GET/POST/PUT/DELETE | `/api/clients[/{id}]` | Client CRUD | 200 / 201 / 204 / 400 / 404 |
+| GET | `/api/service-requests[/{id}]` | List / one | 200 / 404 |
+| POST | `/api/service-requests` | Create – converts USD→ZAR with live rate | **201** / 400 / 404 / **503** |
+| PATCH | `/api/service-requests/{id}/status` | Pending → In Progress → Completed / Cancelled | 200 / 400 |
+| GET | `/api/exchange-rates/usd-zar` | Current rate | 200 / 503 |
+| GET | `/api/dashboard` | Counts for the home page | 200 |
+| GET | `/health` | Liveness check (used by CI) | 200 |
+
+Errors are returned as RFC 7807 `application/problem+json` (see `Infrastructure/ApiExceptionHandler.cs`).
+
+## Architecture & patterns (carried over from Parts 1–2)
+
+**API (`TechMove.Api`)**
+- **Repository** – `Data/Repositories` – the only code that uses `AppDbContext`.
+- **Service Layer** – `Services/*Service.cs` – all business logic (moved unchanged from the Part 2 MVC app).
+- **State (workflow)** – `Services/Workflow/ContractWorkflow.cs`.
+- **Strategy** – `IExchangeRateProvider` (real ExchangeRate-API in production, a fake in tests).
+- **Factory** – `ServiceRequestFactory`.
+- **DTO + Mapper** – `Dtos/` – entities never leave the API; workflow answers (`canCreateServiceRequest`, `allowedNextStatuses`) are calculated here.
+- **Dependency Injection** throughout (`Program.cs`); controllers are thin and contain no SQL.
+
+**Frontend (`TechMove.Web`)**
+- **Typed HttpClient service layer** – `Services/Api/ApiClients.cs` (`IClientsApi`, `IContractsApi`, …).
+- **BearerTokenHandler** (DelegatingHandler) adds the JWT to every call.
+- **Error handling** – `ApiClientBase` turns HTTP failures into `ApiValidationException` / `ApiNotFoundException` /
+  `ApiUnauthorizedException` / `ApiUnavailableException`; `ApiExceptionFilter` shows a friendly page if the API is down
+  and sends the user to sign in if the token expired.
+- **Authentication** – cookie sign-in that stores the API's JWT; every page requires login; only Admins can approve/decline.
+
+## Tests
+
+```bash
+dotnet test                                   # unit + in-process integration tests
+TECHMOVE_API_URL=http://localhost:5001 dotnet test --filter Category=Integration   # against the running container
+```
+
+- `tests/TechMove.Tests/Unit` – currency maths, PDF validation (.exe, renamed .exe, empty, size), workflow, LINQ filter, HttpClient parsing, services (Moq).
+- `tests/TechMove.Tests/Integration` – calls the real API endpoints and asserts status codes **and** data:
+  create-then-read for contracts, clients and service requests, PDF byte-for-byte round trip,
+  201/204/400/401/403/404/503 cases, Swagger document, currency API outage.
+
+GitHub Actions (`.github/workflows/dotnet.yml`) runs two jobs on every push:
+1. **build-and-test** – build + all tests.
+2. **docker-compose-integration** – `docker compose up --build`, waits for `/health`, then runs the integration tests
+   against the **running API container**.
+
+## Database
+
+- Migration: `src/TechMove.Api/Migrations` (applied automatically on API start-up).
+- SQL script: `Database/TechMove_InitialCreate.sql`.

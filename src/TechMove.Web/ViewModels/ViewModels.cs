@@ -109,3 +109,9 @@ public class ServiceRequestCreateViewModel
     [ValidateNever]
     public IEnumerable<SelectListItem> Contracts { get; set; } = Enumerable.Empty<SelectListItem>();
 }
+
+public class UsersIndexViewModel
+{
+    public IReadOnlyList<TechMove.Web.Services.Api.UserAccount> Users { get; set; } = Array.Empty<TechMove.Web.Services.Api.UserAccount>();
+    public IReadOnlyList<Client> Clients { get; set; } = Array.Empty<Client>();
+}

@@ -1,14 +1,18 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TechMove.Web.Infrastructure;
 using TechMove.Web.Models;
-using TechMove.Web.Services;
+using TechMove.Web.Services.Api;
 
 namespace TechMove.Web.Controllers;
 
+/// <summary>Presentation only: every read and write goes through the TechMove API. Employees only.</summary>
+[Authorize(Roles = UserRoles.Employees)]
 public class ClientsController : Controller
 {
-    private readonly IClientService _clients;
+    private readonly IClientsApi _clients;
 
-    public ClientsController(IClientService clients) => _clients = clients;
+    public ClientsController(IClientsApi clients) => _clients = clients;
 
     public async Task<IActionResult> Index(CancellationToken ct) => View(await _clients.GetAllAsync(ct));
 
@@ -26,9 +30,17 @@ public class ClientsController : Controller
     {
         if (!ModelState.IsValid) return View(client);
 
-        await _clients.CreateAsync(client, ct);
-        TempData["Success"] = $"Client '{client.Name}' created.";
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            var created = await _clients.CreateAsync(client, ct);
+            TempData["Success"] = $"Client '{created.Name}' created.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (ApiValidationException ex)
+        {
+            ModelState.AddApiErrors(ex, nameof(Client.Name), nameof(Client.ContactDetails), nameof(Client.Region));
+            return View(client);
+        }
     }
 
     public async Task<IActionResult> Edit(int id, CancellationToken ct)
@@ -47,16 +59,17 @@ public class ClientsController : Controller
         try
         {
             await _clients.UpdateAsync(client, ct);
+            TempData["Success"] = "Client updated.";
+            return RedirectToAction(nameof(Index));
         }
-        catch (NotFoundException)
+        catch (ApiValidationException ex)
         {
-            return NotFound();
+            ModelState.AddApiErrors(ex, nameof(Client.Name), nameof(Client.ContactDetails), nameof(Client.Region));
+            return View(client);
         }
-
-        TempData["Success"] = "Client updated.";
-        return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = UserRoles.Admin)]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var client = await _clients.GetAsync(id, ct);
@@ -64,6 +77,7 @@ public class ClientsController : Controller
     }
 
     [HttpPost, ActionName("Delete")]
+    [Authorize(Roles = UserRoles.Admin)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id, CancellationToken ct)
     {
@@ -72,11 +86,7 @@ public class ClientsController : Controller
             await _clients.DeleteAsync(id, ct);
             TempData["Success"] = "Client deleted.";
         }
-        catch (NotFoundException)
-        {
-            return NotFound();
-        }
-        catch (BusinessRuleException ex)
+        catch (ApiValidationException ex)
         {
             TempData["Error"] = ex.Message;
         }

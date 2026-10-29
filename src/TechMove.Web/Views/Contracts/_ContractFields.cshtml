@@ -22,8 +22,16 @@
 <div class="row">
     <div class="col-sm-6 mb-3">
         <label asp-for="Status" class="form-label"></label>
-        <select asp-for="Status" asp-items="Model.StatusOptions" class="form-select"></select>
-        <span asp-validation-for="Status" class="text-danger small"></span>
+        @if (Model.Id == 0)
+        {
+            <select asp-for="Status" asp-items="Model.StatusOptions" class="form-select"></select>
+            <span asp-validation-for="Status" class="text-danger small"></span>
+        }
+        else
+        {
+            <input type="hidden" asp-for="Status" />
+            <div class="form-control-plaintext"><partial name="_StatusBadge" model="Model.Status" /></div>
+        }
     </div>
     <div class="col-sm-6 mb-3">
         <label asp-for="ServiceLevel" class="form-label"></label>
