@@ -10,7 +10,6 @@ namespace TechMove.Api.Controllers;
 [ApiController]
 [Route("api/exchange-rates")]
 [Authorize]
-[Produces("application/json")]
 public sealed class ExchangeRatesController : ControllerBase
 {
     private readonly IExchangeRateProvider _rates;
@@ -36,7 +35,6 @@ public sealed class ExchangeRatesController : ControllerBase
 [ApiController]
 [Route("api/dashboard")]
 [Authorize]
-[Produces("application/json")]
 public sealed class DashboardController : ControllerBase
 {
     private readonly IDashboardService _dashboard;

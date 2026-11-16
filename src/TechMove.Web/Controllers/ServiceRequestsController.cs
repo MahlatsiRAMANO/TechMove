@@ -8,7 +8,7 @@ using TechMove.Web.ViewModels;
 
 namespace TechMove.Web.Controllers;
 
-/// <summary>Presentation only: the API checks the workflow, fetches the exchange rate and saves the request.</summary>
+
 public class ServiceRequestsController : Controller
 {
     private readonly IServiceRequestsApi _requests;

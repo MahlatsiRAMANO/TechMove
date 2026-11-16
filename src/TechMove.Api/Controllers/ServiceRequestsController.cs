@@ -9,7 +9,6 @@ namespace TechMove.Api.Controllers;
 [ApiController]
 [Route("api/service-requests")]
 [Authorize]
-[Produces("application/json")]
 public sealed class ServiceRequestsController : ControllerBase
 {
     private readonly IServiceRequestService _requests;

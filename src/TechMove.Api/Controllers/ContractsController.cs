@@ -12,7 +12,6 @@ namespace TechMove.Api.Controllers;
 [ApiController]
 [Route("api/contracts")]
 [Authorize]
-[Produces("application/json")]
 public sealed class ContractsController : ControllerBase
 {
     private const long UploadLimit = PdfFileValidator.MaxFileSizeBytes + 1024 * 1024;

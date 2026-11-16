@@ -14,7 +14,7 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add<ApiExceptionFilter>();
 });
 
-// ---- Authentication: cookie for the browser, holding the JWT issued by the API ----
+// ---- Authentication cookie for the browser, holding the JWT issued by the API ----
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

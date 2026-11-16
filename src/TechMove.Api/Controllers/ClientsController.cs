@@ -10,7 +10,6 @@ namespace TechMove.Api.Controllers;
 [ApiController]
 [Route("api/clients")]
 [Authorize]
-[Produces("application/json")]
 public sealed class ClientsController : ControllerBase
 {
     private readonly IClientService _clients;

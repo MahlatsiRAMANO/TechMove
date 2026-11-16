@@ -9,7 +9,6 @@ namespace TechMove.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-[Produces("application/json")]
 public sealed class AuthController : ControllerBase
 {
     private readonly IUserService _users;

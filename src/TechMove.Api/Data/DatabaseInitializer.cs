@@ -37,6 +37,14 @@ public static class DatabaseInitializer
                 logger.LogWarning("Database not ready (attempt {Attempt}/{Max}): {Message}", attempt, maxAttempts, ex.Message);
                 await Task.Delay(TimeSpan.FromSeconds(5), ct);
             }
+            catch (Exception ex)
+            {
+                logger.LogCritical(ex,
+                    "Could not connect to / migrate the database after {Max} attempts. " +
+                    "Start SQL Server first (docker compose up -d sql-server-db) and check ConnectionStrings:DefaultConnection.",
+                    maxAttempts);
+                throw;
+            }
         }
     }
 }

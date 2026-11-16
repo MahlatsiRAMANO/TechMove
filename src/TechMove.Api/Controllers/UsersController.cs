@@ -10,7 +10,6 @@ namespace TechMove.Api.Controllers;
 [ApiController]
 [Route("api/users")]
 [Authorize(Roles = Roles.Admin)]
-[Produces("application/json")]
 public sealed class UsersController : ControllerBase
 {
     private readonly IUserService _users;
